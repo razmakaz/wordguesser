@@ -82,11 +82,12 @@ import { onMount } from 'svelte';
 
 		wordInvalid = false
 		timerRunning = true
+		
+		guesses.unshift(guesses.pop() ?? [])
 
 		for (let i = 0; i < capture.length; i++) {
 			guesses[0][i] = capture[i]
 		}
-		guesses.push(guesses.shift() ?? [])
 		guesses = guesses
 		guessIndex--
 
@@ -175,7 +176,47 @@ import { onMount } from 'svelte';
 		<h1>Loading...</h1>
 		<ProgressRadial class="w-40 h-40 my-8 stroke-primary-500" value={undefined} />
 	{:else if gameState === "playing"}
-		<div class="grid grid-cols-5 gap-4">
+
+	<div class="mt-8 text-center">
+		<h2>
+			<span class={`${getTimerColor(timer)}`}>{timer}</span> SECONDS LEFT
+		</h2>
+		{#if !timerRunning}
+			<span>
+				The timer will start after your first guess and each guess will increase the timer by {timerIncrease} seconds.
+			</span>
+		{/if}
+	</div>
+	<div class="flex flex-col justify-center items-center mt-8">
+		{#each keyboard as row}
+			<div class="flex">
+				{#each row as letter}
+					<button 
+						class={`card w-6 h-6 md:w-8 md:h-8 flex justify-center items-center m-0.5 duration-200 ${letterGuessed(letter)}`}
+						on:click={() => guessWithKeyboard(letter)}
+					>
+						{letter.toUpperCase()}
+					</button>
+				{/each}
+			</div>
+		{/each}
+	</div>
+	{#if wordInvalid}
+		<h4 class="text-red-500 mt-4">
+			{#if invalidReason === 'wrong'}"{capture}" isn't a word!{/if}
+			{#if invalidReason === 'guessed'}"{capture}" has already been guessed!{/if}
+			{#if invalidReason === 'short'}"{capture}" is too short!{/if}
+		</h4>
+	{/if}	
+	<form on:submit={guess}>
+		<div class="input-group input-group-divider grid-cols-[1fr_auto] mt-4 max-w-[300px]">
+			<input type="text" class="input" bind:value={capture} on:input={clampWord} on:keypress={guessOnEnter} />
+			<div class="variant-filled-tertiary duration-200 whitespace-nowrap">{guessIndex} Left</div>
+		</div>
+		<button type="submit" class={`btn variant-filled-secondary duration-200 whitespace-nowrap mt-4 w-[100%] max-w-[300px]`} disabled={capture.length !== 5} on:click={guess}>Guess {capture}</button>
+	</form>
+
+		<div class="grid grid-cols-5 gap-4 mt-8">
 			{#each guesses as word, row}
 				{#each word as letter, col}
 					<div class={`card w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 flex justify-center items-center transform-gpu duration-200 ${letter==="" ? 'variant-ringed-surface' : checkLetter(row, col)}`}>
@@ -187,44 +228,7 @@ import { onMount } from 'svelte';
 			
 		</div>
 
-		<div class="mt-8 text-center">
-			<h2>
-				<span class={`${getTimerColor(timer)}`}>{timer}</span> SECONDS LEFT
-			</h2>
-			{#if !timerRunning}
-				<span>
-					The timer will start after your first guess and each guess will increase the timer by {timerIncrease} seconds.
-				</span>
-			{/if}
-		</div>
-		<div class="flex flex-col justify-center items-center mt-8">
-			{#each keyboard as row}
-				<div class="flex">
-					{#each row as letter}
-						<button 
-							class={`card w-6 h-6 md:w-8 md:h-8 flex justify-center items-center m-0.5 duration-200 ${letterGuessed(letter)}`}
-							on:click={() => guessWithKeyboard(letter)}
-						>
-							{letter.toUpperCase()}
-						</button>
-					{/each}
-				</div>
-			{/each}
-		</div>
-		{#if wordInvalid}
-			<h4 class="text-red-500 mt-4">
-				{#if invalidReason === 'wrong'}"{capture}" isn't a word!{/if}
-				{#if invalidReason === 'guessed'}"{capture}" has already been guessed!{/if}
-				{#if invalidReason === 'short'}"{capture}" is too short!{/if}
-			</h4>
-		{/if}	
-		<form on:submit={guess}>
-			<div class="input-group input-group-divider grid-cols-[1fr_auto] mt-4 max-w-[300px]">
-				<input type="text" class="input" bind:value={capture} on:input={clampWord} on:keypress={guessOnEnter} />
-				<div class="variant-filled-tertiary duration-200 whitespace-nowrap">{guessIndex} Left</div>
-			</div>
-			<button type="submit" class={`btn variant-filled-secondary duration-200 whitespace-nowrap mt-4 w-[100%] max-w-[300px]`} disabled={capture.length !== 5} on:click={guess}>Guess {capture}</button>
-		</form>
+		
 	{:else if gameState === "finished"}
 		<h3 class="text-primary-500">You won in {6 - guessIndex} guesses!</h3>
 	{:else}
