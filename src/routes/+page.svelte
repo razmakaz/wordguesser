@@ -89,17 +89,19 @@ import { onMount } from 'svelte';
 		guesses.push(guesses.shift() ?? [])
 		guesses = guesses
 		guessIndex--
-		capture = ""
-		timer += timerIncrease
 
 		if (capture.toLowerCase() === wordOfTheDay?.toLowerCase()) {
 			gameState = "finished"
 			return
 		}
 
+		capture = ""
+		timer += timerIncrease
+
 		if (guessIndex === 0) {
 			gameState = "gameover"
 			gameoverReason = "You ran out of guesses!"
+			return
 		}
 	}
 
@@ -167,29 +169,12 @@ import { onMount } from 'svelte';
 	}
 
 	setup()
-
-	/**
-	 {#each Array(maxGuesses) as _, i}
-				{#if guesses[i]}
-					{#each guesses[i] ?? [] as letter, j}				
-						<div class={`${cardDefaultClass} ${checkLetter(i, j)} `}>
-							<h1>{letter.toUpperCase()}</h1>
-						</div>
-					{/each}
-				{:else}
-					{#each Array(5) as j}
-						<div class={`${cardDefaultClass} variant-ringed-surface`}></div>
-					{/each}
-				{/if}
-			{/each}
-	*/
 </script>
 <div class="container h-full mx-auto flex flex-col justify-center items-center py-10">
 	{#if gameState === "loading"}
 		<h1>Loading...</h1>
 		<ProgressRadial class="w-40 h-40 my-8 stroke-primary-500" value={undefined} />
 	{:else if gameState === "playing"}
-		
 		<div class="grid grid-cols-5 gap-4">
 			{#each guesses as word, row}
 				{#each word as letter, col}
